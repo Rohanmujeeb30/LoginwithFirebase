@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -14,9 +15,14 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class SignupActivity extends AppCompatActivity {
+    static String id;
     ActivitySignupBinding binding;
     FirebaseAuth auth;
     FirebaseDatabase database;
@@ -32,40 +38,49 @@ public class SignupActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
 
+
     progressDialog = new ProgressDialog(SignupActivity.this);
     progressDialog.setTitle("Creating your account");
     progressDialog.setMessage("We're creating your account, HOLD ON!");
+
+
 
         binding.signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                progressDialog.show();
-                auth.createUserWithEmailAndPassword(binding.Email.getText().toString(), binding.password.getText().toString()).
-                        addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+              if(!binding.Email.getText().toString().equalsIgnoreCase("")&&!binding.password.getText().toString().equalsIgnoreCase("")
+                      &&!binding.name.getText().toString().equalsIgnoreCase("")){
+                  progressDialog.show();
+                  auth.createUserWithEmailAndPassword(binding.Email.getText().toString(), binding.password.getText().toString()).
+                          addOnCompleteListener(new OnCompleteListener<AuthResult>() {
 
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        progressDialog.dismiss();
+                              @Override
+                              public void onComplete(@NonNull Task<AuthResult> task) {
+                                  progressDialog.dismiss();
 
-                        if(task.isSuccessful()){
-                        Users user = new Users(binding.name.getText().toString(),binding.Email.getText().toString(),
-                                binding.password.getText().toString());
+                                  if(task.isSuccessful()){
+                                      Users user = new Users(binding.name.getText().toString(),binding.Email.getText().toString(),
+                                              binding.password.getText().toString());
 
-                        String id = task.getResult().getUser().getUid();
-                        database.getReference().child("Users Login Details").child(id).setValue(user);
-                        Toast.makeText(SignupActivity.this,"Successfully Created your account",Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(SignupActivity.this, Activity4.class));
-                        finish();
-                        }
+                                      id = task.getResult().getUser().getUid();
+                                      database.getReference().child("Users Login Details").child(id).setValue(user);
+                                      Toast.makeText(SignupActivity.this,"Successfully Created your account",Toast.LENGTH_SHORT).show();
+                                      startActivity(new Intent(SignupActivity.this, Activity4.class));
+                                      finish();
+                                  }
 
-                        else
-                        {
-                       Toast.makeText(SignupActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
-                        }
+                                  else
+                                  {
+                                      Toast.makeText(SignupActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                                  }
 
-                    }
-                });
+                              }
+                          });
+              }
+              else{
+                  Toast.makeText(getApplicationContext(), "Please Enter Details First", Toast.LENGTH_SHORT).show();
+              }
             }
         });
 
